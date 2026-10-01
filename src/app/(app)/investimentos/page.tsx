@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
-import { ShieldCheck, Trash2 } from "lucide-react";
+import { ShieldCheck, ShieldOff, Trash2 } from "lucide-react";
 import {
   addMovement,
   createInvestment,
   deleteInvestment,
   deleteMovement,
+  setEmergency,
   updateInvestmentValue,
 } from "@/app/actions/investments";
 import { ActionForm } from "@/components/action-form";
@@ -124,6 +125,15 @@ export default async function InvestmentsPage() {
                           {money(summary.gain)} ({percent(summary.gainPct)})
                         </p>
                       </div>
+                      {i.type !== "reserva" && (
+                        <ActionButton
+                          action={setEmergency.bind(null, i.id, !i.is_emergency)}
+                          title={i.is_emergency ? "Desmarcar como reserva" : "Marcar como reserva"}
+                          className={`rounded-md p-1.5 transition ${i.is_emergency ? "text-sky-600 hover:bg-zinc-100 hover:text-zinc-500" : "text-zinc-400 hover:bg-sky-50 hover:text-sky-600"}`}
+                        >
+                          {i.is_emergency ? <ShieldOff className="size-4" /> : <ShieldCheck className="size-4" />}
+                        </ActionButton>
+                      )}
                       <ActionButton
                         action={deleteInvestment.bind(null, i.id)}
                         confirm={`Excluir "${i.name}" e todas as movimentações?`}

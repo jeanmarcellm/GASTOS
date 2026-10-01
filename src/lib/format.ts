@@ -11,11 +11,16 @@ export function formatDate(iso: string) {
   return `${d}/${m}/${y}`;
 }
 
-/** Aceita "1.234,56", "1234,56" e "1234.56". */
+/**
+ * Aceita "1.234,56", "1234,56", "1234.56" e "1.500" (ponto como milhar).
+ * Campo vazio ou inválido retorna NaN.
+ */
 export function parseAmount(raw: FormDataEntryValue | null): number {
   if (raw == null) return NaN;
   let s = String(raw).trim().replace(/[R$\s]/g, "");
+  if (!s) return NaN;
   if (s.includes(",")) s = s.replace(/\./g, "").replace(",", ".");
+  else if (/^\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g, "");
   return Math.round(Number(s) * 100) / 100;
 }
 

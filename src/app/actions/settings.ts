@@ -8,7 +8,7 @@ import type { ActionState } from "@/lib/types";
 export async function updateProfile(_: ActionState, fd: FormData): Promise<ActionState> {
   const user = await getCurrentUser();
   if (!user) return fail("Sessão expirada. Entre novamente.");
-  const income = parseAmount(fd.get("monthly_income"));
+  const income = text(fd, "monthly_income") ? parseAmount(fd.get("monthly_income")) : 0;
   if (!(income >= 0)) return fail("Informe uma renda válida.");
 
   const supabase = await createClient();

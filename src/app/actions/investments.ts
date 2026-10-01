@@ -91,3 +91,9 @@ export async function deleteMovement(id: string) {
   await supabase.from("investment_movements").delete().eq("id", id);
   done();
 }
+
+export async function setEmergency(id: string, value: boolean) {
+  const supabase = await createClient();
+  await supabase.from("investments").update({ is_emergency: value }).eq("id", id);
+  done();
+}

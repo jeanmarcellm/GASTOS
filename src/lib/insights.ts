@@ -208,24 +208,44 @@ export function generateInsights(data: FinanceData, ym: string): Insight[] {
 
   // 9. Reserva de emergência
   const inv = investmentSummaries(data);
-  if (avgExpenses > 0) {
+  const reserveItems = data.investments.filter((i) => i.is_emergency || i.type === "reserva");
+  const fmtMonths = (m: number) => m.toFixed(1).replace(".", ",");
+  if (!reserveItems.length) {
+    push({
+      id: "emergency-none",
+      level: inv.current > 0 ? "info" : "warning",
+      title:
+        inv.current > 0
+          ? "Nenhum investimento está marcado como reserva de emergência"
+          : "Você ainda não tem reserva de emergência",
+      detail:
+        inv.current > 0
+          ? `Você tem ${money(inv.current)} investidos. Se parte disso é sua reserva, use "Marcar como reserva" na aba Investimentos para acompanhar quantos meses ela cobre.`
+          : `O recomendado é guardar 6 meses de gastos${avgExpenses > 0 ? ` (${money(avgExpenses * 6)})` : ""} em uma aplicação de liquidez diária.`,
+    });
+  } else if (inv.emergency <= 0) {
+    push({
+      id: "emergency-zero",
+      level: "warning",
+      title: "Sua reserva de emergência está com saldo zerado",
+      detail: `Atualize o saldo de ${reserveItems.map((i) => i.name).join(", ")} na aba Investimentos.`,
+    });
+  } else if (avgExpenses > 0) {
     const months = inv.emergency / avgExpenses;
-    if (months < 3) {
-      push({
-        id: "emergency-low",
-        level: months < 1 ? "danger" : "warning",
-        title:
-          inv.emergency > 0
-            ? `Sua reserva cobre só ${months.toFixed(1).replace(".", ",")} mês(es) de gastos`
-            : "Você ainda não tem reserva de emergência",
-        detail: `O recomendado é ter de 6 meses (${money(avgExpenses * 6)}) guardados em aplicação de liquidez diária. Marque seus investimentos de reserva na aba Investimentos.`,
-      });
-    } else if (months >= 6) {
+    const target = avgExpenses * 6;
+    if (months >= 6) {
       push({
         id: "emergency-ok",
         level: "positive",
-        title: `Reserva de emergência completa: ${months.toFixed(1).replace(".", ",")} meses`,
-        detail: "Com a reserva garantida, o excedente pode ir para investimentos de prazo mais longo.",
+        title: `Reserva de emergência completa: cobre ${fmtMonths(months)} meses`,
+        detail: `Você tem ${money(inv.emergency)} guardados. Com a reserva garantida, o excedente pode ir para investimentos de prazo mais longo.`,
+      });
+    } else {
+      push({
+        id: "emergency-partial",
+        level: months < 1 ? "danger" : months < 3 ? "warning" : "info",
+        title: `Sua reserva cobre ${fmtMonths(months)} de 6 meses recomendados`,
+        detail: `Você tem ${money(inv.emergency)} guardados. Faltam ${money(target - inv.emergency)} para chegar a 6 meses de gastos (${money(target)}).`,
       });
     }
   }
