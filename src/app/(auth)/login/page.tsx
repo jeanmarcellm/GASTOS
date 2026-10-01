@@ -8,7 +8,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
   return (
     <>
       {erro && (
-        <p className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">
+        <p className="mb-6 text-[15px] text-accent-2-700" role="alert">
           Não foi possível confirmar seu e-mail. O link pode ter expirado.
         </p>
       )}

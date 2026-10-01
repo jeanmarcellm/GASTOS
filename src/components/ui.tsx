@@ -1,109 +1,165 @@
 import type { ReactNode } from "react";
 
-export const inputCls =
-  "w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 disabled:bg-zinc-100";
-export const btnPrimary =
-  "inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-700 disabled:opacity-60";
-export const btnGhost =
-  "inline-flex items-center justify-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm text-zinc-600 transition hover:bg-zinc-100 hover:text-zinc-900";
+export const inputCls = "input";
+export const btnPrimary = "btn btn-primary";
+export const btnSecondary = "btn btn-secondary";
+/** Botão-ícone de excluir: neutro, magenta no hover. */
+export const btnDanger = "btn btn-ghost btn-icon btn-danger";
+/** Botão-ícone neutro (editar, encerrar...). */
+export const btnMuted = "btn btn-ghost btn-icon btn-muted";
 
-export function PageHeader({ title, subtitle, children }: { title: string; subtitle?: string; children?: ReactNode }) {
+type Tone = "default" | "positive" | "negative" | "muted";
+
+export const TONE_TEXT: Record<Tone, string> = {
+  default: "text-text",
+  positive: "text-accent-700",
+  negative: "text-accent-2-700",
+  muted: "text-neutral-700",
+};
+
+/**
+ * Cabeçalho de página: título, subtítulo em itálico, régua dupla,
+ * linha de data (à esquerda `dateline`, à direita `monthNav` ou `aside`) e régua simples.
+ */
+export function PageHeader({
+  title,
+  subtitle,
+  dateline,
+  monthNav,
+  aside,
+  className = "mb-12",
+}: {
+  title: string;
+  subtitle?: string;
+  dateline: ReactNode;
+  /** Seletor de mês: deixa a linha de data mais baixa (os botões têm 44px). */
+  monthNav?: ReactNode;
+  aside?: ReactNode;
+  className?: string;
+}) {
   return (
-    <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">{title}</h1>
-        {subtitle && <p className="mt-1 text-sm text-zinc-500">{subtitle}</p>}
+    <header className={className}>
+      <h1 className="page-title">{title}</h1>
+      {subtitle && <p className="mb-6 max-w-[60ch] text-[17px] text-neutral-700 italic">{subtitle}</p>}
+      <div className="rule-double" />
+      <div className={`kicker flex flex-wrap items-center justify-between gap-x-7 gap-y-1 ${monthNav ? "py-1" : "py-3.5"}`}>
+        <span>{dateline}</span>
+        {monthNav ?? aside}
       </div>
-      {children}
+      <div className="rule-single" />
+    </header>
+  );
+}
+
+/** Linha de números no topo das páginas. */
+export function StatGrid({ children, className = "mb-[72px]" }: { children: ReactNode; className?: string }) {
+  return <section className={`grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-x-10 gap-y-8 ${className}`}>{children}</section>;
+}
+
+export function Stat({ label, value, hint, tone = "default" }: { label: string; value: string; hint?: ReactNode; tone?: Tone }) {
+  return (
+    <div className="min-w-0">
+      <span className="stat-label">{label}</span>
+      <span className={`stat-value ${TONE_TEXT[tone]}`}>{value}</span>
+      {hint && <span className="mt-1.5 block text-[13px] text-neutral-700">{hint}</span>}
     </div>
   );
 }
 
-export function Card({
-  title,
-  action,
-  children,
-  className = "",
-}: {
-  title?: ReactNode;
-  action?: ReactNode;
-  children: ReactNode;
-  className?: string;
-}) {
+/** Título de seção com um complemento alinhado à direita (total, link...). */
+export function SectionHead({ title, aside, small, className = "mb-3.5" }: { title: ReactNode; aside?: ReactNode; small?: boolean; className?: string }) {
   return (
-    <section className={`rounded-xl border border-zinc-200 bg-white p-5 shadow-sm ${className}`}>
-      {(title || action) && (
-        <div className="mb-4 flex items-center justify-between gap-3">
-          {title && <h2 className="text-sm font-semibold text-zinc-800">{title}</h2>}
-          {action}
-        </div>
-      )}
-      {children}
-    </section>
-  );
-}
-
-const TONES = {
-  default: "text-zinc-900",
-  positive: "text-emerald-600",
-  negative: "text-red-600",
-  muted: "text-zinc-500",
-};
-
-export function Stat({
-  label,
-  value,
-  hint,
-  tone = "default",
-}: {
-  label: string;
-  value: string;
-  hint?: ReactNode;
-  tone?: keyof typeof TONES;
-}) {
-  return (
-    <div className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm">
-      <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">{label}</p>
-      <p className={`mt-1 text-2xl font-semibold tabular-nums ${TONES[tone]}`}>{value}</p>
-      {hint && <p className="mt-1 text-xs text-zinc-500">{hint}</p>}
+    <div className={`flex items-baseline justify-between gap-4 ${className}`}>
+      <h2 className={small ? "h2-sm" : "h2"}>{title}</h2>
+      {aside}
     </div>
   );
 }
 
 export function Field({ label, children, className = "" }: { label: string; children: ReactNode; className?: string }) {
   return (
-    <label className={`flex flex-col gap-1 text-sm ${className}`}>
-      <span className="font-medium text-zinc-700">{label}</span>
+    <label className={`block min-w-0 ${className}`}>
+      <span className="field-label">{label}</span>
       {children}
     </label>
   );
 }
 
-export function Progress({ value, color }: { value: number; color?: string }) {
+/** Barra de progresso: trilho neutral-300, sem raio. Sem `color`, usa a cor pela faixa. */
+export function Progress({ value, color, height = 4 }: { value: number; color?: string; height?: number }) {
   const pct = Math.max(0, Math.min(1, value)) * 100;
-  const auto = value > 1 ? "#dc2626" : value >= 0.8 ? "#f59e0b" : "#10b981";
+  const auto = value > 1 ? "var(--color-accent-2-700)" : value >= 0.8 ? "var(--color-accent-2-400)" : "var(--color-accent)";
   return (
-    <div className="h-2 w-full overflow-hidden rounded-full bg-zinc-100">
-      <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: color ?? auto }} />
+    <div className="bg-neutral-300" style={{ height }}>
+      <div className="h-full" style={{ width: `${pct}%`, background: color ?? auto }} />
     </div>
   );
 }
 
-export function Dot({ color }: { color: string }) {
-  return <span className="inline-block size-2.5 shrink-0 rounded-full" style={{ background: color }} />;
+/** Marcador quadrado com a cor da categoria/cartão. */
+export function Sq({ color, size = 9 }: { color: string; size?: number }) {
+  return <span className="inline-block flex-none self-center" style={{ width: size, height: size, background: color }} />;
 }
 
 export function Empty({ children }: { children: ReactNode }) {
-  return <p className="rounded-lg border border-dashed border-zinc-200 p-6 text-center text-sm text-zinc-500">{children}</p>;
+  return <p className="py-2 text-[15px] text-neutral-700 italic">{children}</p>;
 }
 
-export function Badge({ children, tone = "zinc" }: { children: ReactNode; tone?: "zinc" | "emerald" | "amber" | "red" | "sky" }) {
-  const tones = {
-    zinc: "bg-zinc-100 text-zinc-700",
-    emerald: "bg-emerald-50 text-emerald-700",
-    amber: "bg-amber-50 text-amber-700",
-    red: "bg-red-50 text-red-700",
-    sky: "bg-sky-50 text-sky-700",
-  };
-  return <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${tones[tone]}`}>{children}</span>;
+export function Tag({ children, tone = "accent", className = "" }: { children: ReactNode; tone?: "accent" | "accent-2"; className?: string }) {
+  return <span className={`tag tag-${tone} ${className}`}>{children}</span>;
+}
+
+/** Linha de índice com pontilhado: [■] Nome ······ % valor */
+export function IndexRow({
+  label,
+  value,
+  color,
+  pct,
+  className = "",
+}: {
+  label: ReactNode;
+  value: ReactNode;
+  color?: string;
+  pct?: string;
+  className?: string;
+}) {
+  return (
+    <div className={`flex items-baseline gap-2.5 text-[15px] leading-[34px] ${className}`}>
+      {color && <Sq color={color} />}
+      <span className="min-w-0 truncate">{label}</span>
+      <span className="leader" />
+      {pct && <span className="tnum text-[13px] text-neutral-700">{pct}</span>}
+      <span className="tnum min-w-[94px] text-right whitespace-nowrap">{value}</span>
+    </div>
+  );
+}
+
+/** Índice do destaque (Painel e Investimentos): rótulo ····· valor grande, dica abaixo. */
+export function HighlightIndex({ rows }: { rows: { label: string; value: string; hint?: string; tone?: Tone }[] }) {
+  return (
+    <div className="flex min-w-0 flex-[1_1_320px] flex-col">
+      {rows.map((r) => (
+        <div key={r.label} className="flex flex-col py-2.5">
+          <div className="flex items-baseline gap-2.5">
+            <span className="text-[15px]">{r.label}</span>
+            <span className="leader mb-[0.42em] min-w-6" />
+            <span className={`tnum text-[22px] font-semibold ${TONE_TEXT[r.tone ?? "default"]}`}>{r.value}</span>
+          </div>
+          {r.hint && <span className="text-right text-[13px] text-neutral-700">{r.hint}</span>}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** Número de destaque com o efeito de impressão em 3 chapas (C, M, Y). */
+export function CmykNum({ value, className = "", style }: { value: string; className?: string; style?: React.CSSProperties }) {
+  return (
+    <div className={`cmyk-num ${className}`} style={style}>
+      <span className="paper">{value}</span>
+      <span className="plate plate-c" aria-hidden="true">{value}</span>
+      <span className="plate plate-m" aria-hidden="true">{value}</span>
+      <span className="plate plate-y" aria-hidden="true">{value}</span>
+    </div>
+  );
 }

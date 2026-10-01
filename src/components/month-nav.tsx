@@ -1,21 +1,23 @@
 import Link from "next/link";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import { addMonths, currentMonth, monthLabel } from "@/lib/months";
+import { Icon } from "./icon";
 
+const arrow = "btn btn-ghost btn-icon btn-icon-lg text-text hover:text-text";
+
+/** Seletor de mês: fica dentro da linha de data, sem caixa. */
 export function MonthNav({ ym, basePath }: { ym: string; basePath: string }) {
   const href = (m: string) => `${basePath}?mes=${m}`;
-  const arrow = "rounded-lg p-2 text-zinc-600 transition hover:bg-zinc-100";
   return (
-    <div className="flex items-center gap-1 rounded-xl border border-zinc-200 bg-white p-1 shadow-sm">
+    <div className="-mr-2.5 flex items-center gap-0.5">
       <Link href={href(addMonths(ym, -1))} className={arrow} aria-label="Mês anterior">
-        <ChevronLeft className="size-4" />
+        <Icon name="caret-left" />
       </Link>
-      <span className="min-w-40 text-center text-sm font-medium text-zinc-800">{monthLabel(ym)}</span>
+      <span className="min-w-[150px] text-center text-text">{monthLabel(ym)}</span>
       <Link href={href(addMonths(ym, 1))} className={arrow} aria-label="Próximo mês">
-        <ChevronRight className="size-4" />
+        <Icon name="caret-right" />
       </Link>
       {ym !== currentMonth() && (
-        <Link href={basePath} className="rounded-lg px-2 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-50">
+        <Link href={basePath} className="flex min-h-11 items-center px-2.5">
           Hoje
         </Link>
       )}

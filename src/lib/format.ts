@@ -3,7 +3,11 @@ import type { InvestmentType, PaymentMethod } from "./types";
 const brl = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 const pct = new Intl.NumberFormat("pt-BR", { style: "percent", maximumFractionDigits: 1 });
 
+const brlRound = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
+
 export const money = (value: number) => brl.format(value || 0);
+/** Sem centavos, para os números de destaque. */
+export const moneyRound = (value: number) => brlRound.format(value || 0);
 export const percent = (ratio: number) => pct.format(Number.isFinite(ratio) ? ratio : 0);
 
 export function formatDate(iso: string) {

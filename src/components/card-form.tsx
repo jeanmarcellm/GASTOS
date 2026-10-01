@@ -7,7 +7,7 @@ export function CardForm({ card }: { card?: CreditCard }) {
   const action = card ? updateCard.bind(null, card.id) : createCard;
   return (
     <ActionForm action={action} submitLabel={card ? "Salvar" : "Cadastrar cartão"}>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-x-4 gap-y-[18px]">
         <Field label="Nome" className="col-span-2">
           <input name="name" required maxLength={60} defaultValue={card?.name} className={inputCls} placeholder="Ex.: Nubank" />
         </Field>
@@ -15,7 +15,13 @@ export function CardForm({ card }: { card?: CreditCard }) {
           <input name="brand" maxLength={30} defaultValue={card?.brand ?? ""} className={inputCls} placeholder="Visa, Master..." />
         </Field>
         <Field label="Limite">
-          <input name="credit_limit" inputMode="decimal" defaultValue={card ? String(card.credit_limit).replace(".", ",") : ""} className={inputCls} placeholder="0,00" />
+          <input
+            name="credit_limit"
+            inputMode="decimal"
+            defaultValue={card ? card.credit_limit.toLocaleString("pt-BR", { minimumFractionDigits: 2 }) : ""}
+            className={`${inputCls} tnum`}
+            placeholder="0,00"
+          />
         </Field>
         <Field label="Dia do fechamento">
           <input name="closing_day" type="number" min={1} max={31} required defaultValue={card?.closing_day ?? 1} className={inputCls} />
@@ -24,7 +30,7 @@ export function CardForm({ card }: { card?: CreditCard }) {
           <input name="due_day" type="number" min={1} max={31} required defaultValue={card?.due_day ?? 10} className={inputCls} />
         </Field>
         <Field label="Cor">
-          <input name="color" type="color" defaultValue={card?.color ?? "#6366f1"} className="h-9 w-full cursor-pointer rounded-lg border border-zinc-300" />
+          <input name="color" type="color" defaultValue={card?.color ?? "#0088b0"} className={inputCls} />
         </Field>
       </div>
     </ActionForm>

@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { useFormStatus } from "react-dom";
+import { btnDanger } from "./ui";
 
 function Submit({ children, className, title }: { children: ReactNode; className: string; title?: string }) {
   const { pending } = useFormStatus();
@@ -18,7 +19,7 @@ export function ActionButton({
   children,
   confirm,
   title,
-  className = "inline-flex items-center gap-1 rounded-md p-1.5 text-zinc-400 transition hover:bg-red-50 hover:text-red-600 disabled:opacity-50",
+  className = btnDanger,
 }: {
   action: () => Promise<void>;
   children: ReactNode;
@@ -32,7 +33,7 @@ export function ActionButton({
       onSubmit={(e) => {
         if (confirm && !window.confirm(confirm)) e.preventDefault();
       }}
-      className="inline"
+      className="inline-flex"
     >
       <Submit className={className} title={title}>
         {children}

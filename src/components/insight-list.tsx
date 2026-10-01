@@ -1,24 +1,29 @@
-import { AlertTriangle, CheckCircle2, Info, OctagonAlert } from "lucide-react";
-import type { Insight } from "@/lib/insights";
+import type { Insight, InsightLevel } from "@/lib/insights";
+import { Icon, type IconName } from "./icon";
 
-const STYLES = {
-  danger: { icon: OctagonAlert, cls: "border-red-200 bg-red-50/60", iconCls: "text-red-600" },
-  warning: { icon: AlertTriangle, cls: "border-amber-200 bg-amber-50/60", iconCls: "text-amber-600" },
-  info: { icon: Info, cls: "border-sky-200 bg-sky-50/60", iconCls: "text-sky-600" },
-  positive: { icon: CheckCircle2, cls: "border-emerald-200 bg-emerald-50/60", iconCls: "text-emerald-600" },
+const LEVELS: Record<InsightLevel, { icon: IconName; color: string; label: string }> = {
+  danger: { icon: "warning-octagon", color: "var(--color-accent-2-700)", label: "Alerta" },
+  warning: { icon: "warning", color: "var(--color-accent-2-600)", label: "Atenção" },
+  info: { icon: "info", color: "var(--color-accent-700)", label: "Informação" },
+  positive: { icon: "check-circle", color: "var(--color-accent-700)", label: "Bom sinal" },
 };
 
-export function InsightList({ insights }: { insights: Insight[] }) {
+export function InsightList({ insights, showLevel }: { insights: Insight[]; showLevel?: boolean }) {
   return (
-    <ul className="flex flex-col gap-3">
+    <ul className={`flex flex-col ${showLevel ? "gap-7" : "gap-[26px]"}`}>
       {insights.map((i) => {
-        const { icon: Icon, cls, iconCls } = STYLES[i.level];
+        const level = LEVELS[i.level];
         return (
-          <li key={i.id} className={`flex gap-3 rounded-lg border p-3 ${cls}`}>
-            <Icon className={`mt-0.5 size-5 shrink-0 ${iconCls}`} />
+          <li key={i.id} className="flex gap-4">
+            <Icon name={level.icon} size={24} className="mt-px flex-none" style={{ color: level.color }} />
             <div>
-              <p className="text-sm font-medium text-zinc-900">{i.title}</p>
-              <p className="mt-0.5 text-sm text-zinc-600">{i.detail}</p>
+              {showLevel && (
+                <span className="mb-0.5 block text-[11px] tracking-[0.1em] uppercase" style={{ color: level.color }}>
+                  {level.label}
+                </span>
+              )}
+              <p className="text-lg leading-[1.3] font-semibold">{i.title}</p>
+              <p className={`mt-1 text-[15px] leading-[1.55] text-neutral-800 ${showLevel ? "max-w-[64ch]" : "max-w-[62ch]"}`}>{i.detail}</p>
             </div>
           </li>
         );

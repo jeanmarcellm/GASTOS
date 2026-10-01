@@ -1,19 +1,22 @@
 import type { Metadata } from "next";
-import { Trash2 } from "lucide-react";
 import { deleteCard } from "@/app/actions/cards";
+import { SimpleBars } from "@/components/bars";
 import { CardForm } from "@/components/card-form";
-import { SimpleBars } from "@/components/charts";
 import { ActionButton } from "@/components/confirm-button";
+import { Icon } from "@/components/icon";
 import { MonthNav } from "@/components/month-nav";
 import { TransactionForm } from "@/components/transaction-form";
 import { TransactionTable } from "@/components/transaction-table";
-import { Card, Empty, PageHeader, Progress, Stat } from "@/components/ui";
+import { Empty, PageHeader, Progress, SectionHead, Sq, Stat, StatGrid } from "@/components/ui";
 import { loadFinance } from "@/lib/data";
 import { cardStatus, futureInstallments } from "@/lib/finance";
 import { money, percent } from "@/lib/format";
 import { monthLabel, parseMonth } from "@/lib/months";
 
 export const metadata: Metadata = { title: "Cartões" };
+
+const joinNames = (names: string[]) =>
+  names.length <= 1 ? names.join("") : `${names.slice(0, -1).join(", ")} e ${names[names.length - 1]}`;
 
 export default async function CardsPage({ searchParams }: PageProps<"/cartoes">) {
   const ym = parseMonth((await searchParams).mes);
@@ -24,16 +27,20 @@ export default async function CardsPage({ searchParams }: PageProps<"/cartoes">)
   const outstanding = statuses.reduce((a, c) => a + c.outstanding, 0);
   const future = futureInstallments(data, ym, 12);
   const futureTotal = future.reduce((a, f) => a + f.total, 0);
+  const n = data.cards.length;
 
   return (
     <>
-      <PageHeader title="Cartões de crédito" subtitle="Compras no cartão entram na fatura certa automaticamente, com parcelas nos meses seguintes.">
-        <MonthNav ym={ym} basePath="/cartoes" />
-      </PageHeader>
+      <PageHeader
+        title="Cartões de crédito"
+        subtitle="Compras no cartão entram na fatura certa automaticamente, com parcelas nos meses seguintes."
+        dateline={`Cartões · ${n} ${n === 1 ? "cadastrado" : "cadastrados"}`}
+        monthNav={<MonthNav ym={ym} basePath="/cartoes" />}
+      />
 
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <Stat label={`Faturas de ${monthLabel(ym, "short")}`} value={money(invoiceTotal)} />
-        <Stat label="Limite total" value={money(limitTotal)} />
+      <StatGrid className="mb-16">
+        <Stat label={`Faturas de ${monthLabel(ym, "short")}`} value={money(invoiceTotal)} hint={`${n} ${n === 1 ? "cartão" : "cartões"}`} />
+        <Stat label="Limite total" value={money(limitTotal)} hint={n ? joinNames(data.cards.map((c) => c.name)) : undefined} />
         <Stat
           label="Limite comprometido"
           value={money(outstanding)}
@@ -41,92 +48,109 @@ export default async function CardsPage({ searchParams }: PageProps<"/cartoes">)
           tone={limitTotal > 0 && outstanding / limitTotal > 0.7 ? "negative" : "default"}
         />
         <Stat label="Parcelas futuras" value={money(futureTotal)} hint="Próximos 12 meses" />
-      </div>
+      </StatGrid>
 
       {statuses.length > 0 && (
-        <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <section className="mb-20 grid grid-cols-[repeat(auto-fill,minmax(min(100%,320px),1fr))] gap-6">
           {statuses.map((st) => (
-            <div key={st.card.id} className="rounded-xl border border-zinc-200 bg-white shadow-sm">
-              <div
-                className="rounded-t-xl p-4 text-white"
-                style={{ background: `linear-gradient(135deg, ${st.card.color}, ${st.card.color}cc)` }}
-              >
-                <div className="flex items-start justify-between">
+            <article key={st.card.id} className="card">
+              <div className="h-2" style={{ background: st.card.color }} />
+              <div className="flex flex-col gap-4 px-[22px] pt-5 pb-[22px]">
+                <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="font-semibold">{st.card.name}</p>
-                    <p className="text-xs opacity-80">{st.card.brand ?? "Cartão de crédito"}</p>
+                    <span className="card-kicker">{st.card.brand ?? "Cartão de crédito"}</span>
+                    <span className="block text-2xl leading-[1.15] font-semibold">{st.card.name}</span>
                   </div>
                   <ActionButton
                     action={deleteCard.bind(null, st.card.id)}
                     confirm={`Excluir o cartão ${st.card.name}? Todas as compras dele também serão excluídas.`}
                     title="Excluir cartão"
-                    className="rounded-md p-1.5 text-white/70 hover:bg-white/20 hover:text-white"
                   >
-                    <Trash2 className="size-4" />
+                    <Icon name="trash" />
                   </ActionButton>
                 </div>
-                <p className="mt-4 text-xs opacity-80">Fatura de {monthLabel(ym)}</p>
-                <p className="text-2xl font-semibold tabular-nums">{money(st.invoiceTotal)}</p>
-              </div>
-              <div className="space-y-2 p-4 text-sm">
-                <div className="flex justify-between text-zinc-500">
+                <div>
+                  <span className="block text-[13px] text-neutral-700">Fatura de {monthLabel(ym)}</span>
+                  <span className="tnum block text-4xl leading-[1.1] font-semibold tracking-[-0.02em]">{money(st.invoiceTotal)}</span>
+                </div>
+                <div className="flex justify-between text-sm text-neutral-800">
                   <span>Fecha dia {st.card.closing_day}</span>
                   <span>Vence dia {st.card.due_day}</span>
                 </div>
                 {st.card.credit_limit > 0 && (
-                  <>
+                  <div>
                     <Progress value={st.usage} />
-                    <div className="flex justify-between text-xs text-zinc-500">
+                    <div className="tnum mt-2 flex justify-between gap-2 text-[13px] text-neutral-700">
                       <span>Usado {money(st.outstanding)}</span>
                       <span>Disponível {money(st.available)}</span>
                     </div>
-                  </>
+                  </div>
                 )}
-                <details className="pt-1">
-                  <summary className="cursor-pointer text-xs font-medium text-emerald-700">Editar cartão</summary>
-                  <div className="mt-3">
+                <details className="group">
+                  <summary className="inline-flex min-h-8 cursor-pointer items-center gap-1.5 text-sm text-accent-700 hover:text-accent-800">
+                    <Icon name="pencil-simple" size={15} />
+                    Editar cartão
+                  </summary>
+                  <div className="mt-4">
                     <CardForm card={st.card} />
                   </div>
                 </details>
               </div>
-            </div>
+            </article>
           ))}
-        </div>
+        </section>
       )}
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-3">
-        <Card title="Nova compra no cartão" className="lg:col-span-2">
+      <section className="mb-20 flex flex-wrap gap-x-[72px] gap-y-14">
+        <div className="min-w-0 flex-[2_1_420px]">
           {data.cards.length ? (
-            <TransactionForm categories={data.categories} cards={data.cards} mode="card" />
+            <TransactionForm title="Nova compra no cartão" categories={data.categories} cards={data.cards} mode="card" />
           ) : (
-            <Empty>Cadastre um cartão ao lado para registrar compras.</Empty>
+            <>
+              <h2 className="h2 mb-5">Nova compra no cartão</h2>
+              <Empty>Cadastre um cartão ao lado para registrar compras.</Empty>
+            </>
           )}
-        </Card>
-        <Card title="Novo cartão">
+        </div>
+        <div className="min-w-0 flex-[1_1_280px]">
+          <h2 className="h2 mb-5">Novo cartão</h2>
           <CardForm />
-        </Card>
-      </div>
+        </div>
+      </section>
 
       {statuses.map((st) => (
-        <Card
-          key={st.card.id}
-          title={`Fatura ${st.card.name} · ${monthLabel(ym)}`}
-          action={<span className="text-sm font-semibold tabular-nums">{money(st.invoiceTotal)}</span>}
-          className="mt-6"
-        >
+        <section key={st.card.id} className="mb-16">
+          <SectionHead
+            title={
+              <span className="flex items-center gap-2.5">
+                <Sq color={st.card.color} size={10} />
+                Fatura {st.card.name}
+              </span>
+            }
+            aside={<span className="tnum text-lg font-semibold whitespace-nowrap">{money(st.invoiceTotal)}</span>}
+          />
           <TransactionTable
             rows={st.invoice}
             categories={data.categories}
+            variant="list"
             showMethod={false}
+            shortDate
             emptyText="Nenhuma compra nesta fatura."
           />
-        </Card>
+        </section>
       ))}
 
       {futureTotal > 0 && (
-        <Card title="Parcelas já comprometidas nos próximos meses" className="mt-6">
-          <SimpleBars data={future.map((f) => ({ label: monthLabel(f.ym, "short"), value: f.total }))} />
-        </Card>
+        <section>
+          <h2 className="h2 mb-1.5">Parcelas já comprometidas</h2>
+          <p className="mb-6 text-[15px] text-neutral-700">Próximos 12 meses · {money(futureTotal)} no total</p>
+          <SimpleBars
+            height={180}
+            color="var(--color-neutral-800)"
+            showValues
+            data={future.map((f) => ({ label: monthLabel(f.ym, "short").slice(0, 3), value: f.total }))}
+          />
+        </section>
       )}
     </>
   );

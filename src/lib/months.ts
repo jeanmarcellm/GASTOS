@@ -61,3 +61,21 @@ export function invoiceMonth(purchaseDate: string, closingDay: number, dueDay: n
   if (day >= closingDay) closing = addMonths(closing, 1);
   return dueDay > closingDay ? closing : addMonths(closing, 1);
 }
+
+/** "2026-09" -> "setembro" (para frases corridas). */
+export function monthName(ym: string): string {
+  const [y, m] = ym.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, 15)).toLocaleDateString("pt-BR", { month: "long", timeZone: "UTC" });
+}
+
+/** Data de hoje por extenso: "Quarta-feira, 1 de outubro de 2026". */
+export function todayLong(): string {
+  const label = new Date().toLocaleDateString("pt-BR", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: TZ,
+  });
+  return label.charAt(0).toUpperCase() + label.slice(1);
+}
